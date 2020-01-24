@@ -1,0 +1,2 @@
+#define WIFI_SSID "GVT-B0CF"
+#define WIFI_PASS "9303000687"
