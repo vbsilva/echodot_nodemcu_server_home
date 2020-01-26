@@ -54,8 +54,12 @@ void wifiSetup() {
 
 }
 
-void PWR_AC() {
+void ac_pwr() {
   irsend.sendRaw(AC_PWR, AC_LEN, IR_FREQ);
+}
+
+void tv_pwr() {
+  irsend.sendRaw(TV_PWR, TC_LEN, IR_FREQ);
 }
 
 void serverSetup() {
@@ -70,8 +74,8 @@ void serverSetup() {
           const char* json_str = (const char*)data;
           DeserializationError err = deserializeJson(doc, json_str);
           if (err) {
-            request->send(200, "text/plain", err.c_str());
-          }else {
+            request->send(400, "text/plain", err.c_str());
+          } else {
             webRequest = true;
             request->send(200, "text/plain", "processing input");
           }
@@ -91,8 +95,12 @@ void serverSetup() {
 void processWebRequest() {
   JsonObject obj = doc.as<JsonObject>();
   for (JsonPair p : obj) {
-    Serial.print(p.key().c_str());
-    Serial.println(p.value().as<int>());
+    int value = p.value().as<int>();
+    const char* key = p.key().c_str();
+
+    if (value == 0) continue;
+   
+    // TODO: handle keys
   }
   
   
@@ -126,9 +134,9 @@ void setup() {
         Serial.printf("[MAIN] Device #%d (%s) state: %s value: %d\n", device_id, device_name, state ? "ON" : "OFF", value);
 
         if (strcmp(device_name, "air conditioner") == 0) {
-          
+          ac_pwr();
         } else if (strcmp(device_name, "television") == 0) {
-          irsend.sendRaw(TV_PWR, TV_LEN, IR_FREQ);
+          tv_pwr();
         }
 
     });
