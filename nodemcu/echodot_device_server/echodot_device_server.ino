@@ -11,6 +11,13 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
+#include <Servo.h>
+
+Servo servo;
+const uint16_t servoPin = 14; //D5
+const uint16_t ac_pos = 60;
+const uint16_t tv_pos = 150;
+
 const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
 
@@ -58,10 +65,14 @@ void wifiSetup() {
 }
 
 void ac_pwr() {
+  servo.write(ac_pos);
+  delay(500);
   irsend.sendRaw(AC_PWR, AC_LEN, IR_FREQ);
 }
 
 void tv_pwr() {
+  servo.write(tv_pos);
+  delay(500);
   irsend.sendRaw(TV_PWR, TV_LEN, IR_FREQ);
 }
 
@@ -117,6 +128,9 @@ void setup() {
 
     pinMode(fanRelayPin, OUTPUT);
     digitalWrite(fanRelayPin, LOW);
+
+    servo.attach(servoPin);
+    servo.write(0);
 
     Serial.begin(SERIAL_BAUDRATE);
     Serial.println();
