@@ -13,15 +13,23 @@
 
 #include <Servo.h>
 
+#include <SimpleTimer.h>
+
+SimpleTimer timer;
+
 Servo servo;
 const uint16_t servoPin = 14; //D5
-const uint16_t ac_pos = 60;
-const uint16_t tv_pos = 150;
+const uint16_t ac_pos = 50;
+const uint16_t tv_pos = 160;
+const uint16_t servo_delay = 4000;
 
 const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
 
 const uint16_t fanRelayPin = 16; // D0
+
+const uint16_t debugLedPin = 5; //D1
+bool debugLedState = false;
 
 bool webRequest = false;
 
@@ -64,17 +72,29 @@ void wifiSetup() {
 
 }
 
-void ac_pwr() {
-  servo.write(ac_pos);
-  delay(500);
+void ac_remote() {
   irsend.sendRaw(AC_PWR, AC_LEN, IR_FREQ);
+  digitalWrite(debugLedPin, debugLedState);
 }
 
-void tv_pwr() {
-  servo.write(tv_pos);
-  delay(500);
-  irsend.sendRaw(TV_PWR, TV_LEN, IR_FREQ);
+void ac_helper() {
+  servo.write(ac_pos);
+  debugLedState = !debugLedState;
+  //irsend.sendRaw(AC_PWR, AC_LEN, IR_FREQ);
+  timer.setTimeout(1000, ac_remote);
 }
+
+void tv_remote() {
+  irsend.sendRaw(TV_PWR, TV_LEN, IR_FREQ);
+  digitalWrite(debugLedPin, debugLedState);
+}
+
+void tv_helper() {  
+  servo.write(tv_pos);
+  debugLedState = !debugLedState;
+  timer.setTimeout(1000, tv_remote);
+}
+
 
 void serverSetup() {
 
@@ -84,17 +104,6 @@ void serverSetup() {
         Serial.println("Request" + request->url());
         if (fauxmo.process(request->client(), request->method() == HTTP_GET, request->url(), String((char *)data))) return;
         // Handle any other body request here...
-        if (request->url() == "/index.html" && request->method() == HTTP_POST) {
-          const char* json_str = (const char*)data;
-          DeserializationError err = deserializeJson(doc, json_str);
-          if (err) {
-            request->send(400, "text/plain", err.c_str());
-          } else {
-            webRequest = true;
-            request->send(200, "text/plain", debug);
-          }
-
-        }
     });
     server.onNotFound([](AsyncWebServerRequest *request) {
         String body = (request->hasParam("body", true)) ? request->getParam("body", true)->value() : String();
@@ -102,23 +111,21 @@ void serverSetup() {
         // Handle not found request here...
     });
 
+    server.on("/ac", HTTP_GET, [](AsyncWebServerRequest *request) {
+      ac_helper();
+      request->send(200, "text/plain", String(random(1000)));
+    });
+
+    server.on("/tv", HTTP_GET, [](AsyncWebServerRequest *request) {
+      tv_helper();
+      request->send(200, "text/plain", String(random(1000)));
+    });
+
     server.begin();
 
 }
 
 void processWebRequest() {
-  JsonObject obj = doc.as<JsonObject>();
-  for (JsonPair p : obj) {
-    int value = p.value().as<int>();
-    const char* key = p.key().c_str();
-    Serial.println(key);
-    Serial.println(value);
-
-    if (value == 0) continue;
-   
-    // TODO: handle keys
-  }
-  
   
 }
 
@@ -129,8 +136,11 @@ void setup() {
     pinMode(fanRelayPin, OUTPUT);
     digitalWrite(fanRelayPin, LOW);
 
+    pinMode(debugLedPin, OUTPUT);
+    digitalWrite(debugLedPin, LOW);
+    
     servo.attach(servoPin);
-    servo.write(0);
+    //servo.write(0);
 
     Serial.begin(SERIAL_BAUDRATE);
     Serial.println();
@@ -159,18 +169,11 @@ void setup() {
         debug += "\ndevice id: " + String(device_id) + " device_name: "+ device_name + " state: "+ String(state); 
 
         if (strcmp(device_name, "air conditioner") == 0) {
-          debug += "\nair conditioner if";
-          ac_pwr();
+          ac_helper();
         } else if (strcmp(device_name, "television") == 0) {
-          debug += "\ntv if";
-          tv_pwr();
+          tv_helper();
         } else if (strcmp(device_name, "fan") == 0) {
           state ? digitalWrite(fanRelayPin, HIGH) : digitalWrite(fanRelayPin, LOW);
-          debug += "\n digitalWrite on pin" + String(fanRelayPin);
-          Serial.print("digitalWrite fan pin: ");
-          Serial.println(fanRelayPin);
-          Serial.print("state: ");
-          Serial.println(state);
         }
 
     });
@@ -179,6 +182,7 @@ void setup() {
 
 void loop() {
 
+    timer.run();
     fauxmo.handle();
     if (webRequest) {
       webRequest = false;
