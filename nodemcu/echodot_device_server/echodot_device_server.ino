@@ -6,41 +6,35 @@
 #endif
 #include <ESPAsyncWebServer.h>
 #include "fauxmoESP.h"
-#include <ArduinoJson.h>
-
-#include <IRremoteESP8266.h>
-#include <IRsend.h>
-
-#include <Servo.h>
-
-#include <SimpleTimer.h>
-
-SimpleTimer timer;
-
-Servo servo;
-const uint16_t servoPin = 14; //D5
-const uint16_t ac_pos = 50;
-const uint16_t tv_pos = 160;
-const uint16_t servo_delay = 4000;
-
-const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
-IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
-
-const uint16_t fanRelayPin = 16; // D0
-
-const uint16_t debugLedPin = 5; //D1
-bool debugLedState = false;
-
-bool webRequest = false;
 
 #include "credentials.h"
 #include "myir_raw.h"
 
+#include <IRremoteESP8266.h>
+#include <IRsend.h>
+#include <Servo.h>
+#include <SimpleTimer.h>
+//#include <DHTesp.h>
+
+
+SimpleTimer timer;
+
+Servo servo;
+const uint16_t servoPin = 14; // D5
+const uint16_t ac_pos = 50;
+const uint16_t tv_pos = 160;
+const uint16_t servo_delay = 1000;
+
+const uint16_t kIrLed = 4;  // D2.
+IRsend irsend(kIrLed);
+
+const uint16_t fanRelayPin = 16; // D0
+
+const uint16_t debugLedPin = 0; // D3
+bool debugLedState = false;
+
 fauxmoESP fauxmo;
 AsyncWebServer server(80);
-StaticJsonDocument<200> doc;
-
-String debug;
 
 
 // -----------------------------------------------------------------------------
@@ -80,8 +74,7 @@ void ac_remote() {
 void ac_helper() {
   servo.write(ac_pos);
   debugLedState = !debugLedState;
-  //irsend.sendRaw(AC_PWR, AC_LEN, IR_FREQ);
-  timer.setTimeout(1000, ac_remote);
+  timer.setTimeout(servo_delay, ac_remote);
 }
 
 void tv_remote() {
@@ -92,7 +85,7 @@ void tv_remote() {
 void tv_helper() {  
   servo.write(tv_pos);
   debugLedState = !debugLedState;
-  timer.setTimeout(1000, tv_remote);
+  timer.setTimeout(servo_delay, tv_remote);
 }
 
 
@@ -113,21 +106,27 @@ void serverSetup() {
 
     server.on("/ac", HTTP_GET, [](AsyncWebServerRequest *request) {
       ac_helper();
-      request->send(200, "text/plain", String(random(1000)));
+      request->send(200, "text/plain", ":)");
     });
 
     server.on("/tv", HTTP_GET, [](AsyncWebServerRequest *request) {
       tv_helper();
-      request->send(200, "text/plain", String(random(1000)));
+      request->send(200, "text/plain", ":)");
     });
 
+    server.on("/fan", HTTP_GET, [](AsyncWebServerRequest *request) {
+      if (request->hasParam("on")) digitalWrite(fanRelayPin, HIGH);
+      else digitalWrite(fanRelayPin, LOW);
+      request->send(200, "text/plain", ":)");
+    });
+
+    server.on("/temp", HTTP_GET, [](AsyncWebServerRequest *request) {       
+      request->send(200, "text/plain", "Todo");
+    });
     server.begin();
 
 }
 
-void processWebRequest() {
-  
-}
 
 void setup() {
 
@@ -140,16 +139,15 @@ void setup() {
     digitalWrite(debugLedPin, LOW);
     
     servo.attach(servoPin);
-    //servo.write(0);
 
     Serial.begin(SERIAL_BAUDRATE);
     Serial.println();
-    Serial.println();
+    
 
     wifiSetup();
-    debug += "Connected\n";
 
     serverSetup();
+
 
     fauxmo.createServer(false);
     fauxmo.setPort(80); // This is required for gen3 devices
@@ -166,7 +164,6 @@ void setup() {
         // Callback when a command from Alexa is received. 
         
         Serial.printf("[MAIN] Device #%d (%s) state: %s value: %d\n", device_id, device_name, state ? "ON" : "OFF", value);
-        debug += "\ndevice id: " + String(device_id) + " device_name: "+ device_name + " state: "+ String(state); 
 
         if (strcmp(device_name, "air conditioner") == 0) {
           ac_helper();
@@ -178,16 +175,13 @@ void setup() {
 
     });
 
+
 }
 
 void loop() {
 
     timer.run();
     fauxmo.handle();
-    if (webRequest) {
-      webRequest = false;
-      processWebRequest();
-    }
 
     // This is a sample code to output free heap every 5 seconds
     // This is a cheap way to detect memory leaks
