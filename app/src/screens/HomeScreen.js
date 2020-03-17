@@ -4,19 +4,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 
 const HomeScreen = (props) => {
-    console.log(props.navigation);
     return (
         <LinearGradient
             colors = {['#020316', '#020316', '#0A063C']}
             style={styles.gradient} >
-                <View>
-                    <Image style={styles.splash_image} source={require('../../assets/chroma_lair_nobg.png')}/>
-                    <TouchableOpacity style={styles.button} onPress={() => {props.navigation.navigate('Device')}}>
-                        <Image style={styles.icon} source={require('../../assets/login_icon.png')}/>
-                        <Text style={styles.text}> Login </Text>
-                    </TouchableOpacity>
+                
+                <Image style={styles.splash_image} source={require('../../assets/chroma_lair_nobg.png')}/>
+                <TouchableOpacity style={styles.button} onPress={() => {props.navigation.navigate('Device')}}>
+                    <Image style={styles.icon} source={require('../../assets/login_icon.png')}/>
+                    <Text style={styles.text}> Login </Text>
+                </TouchableOpacity>
 
-                </View>
             </LinearGradient>
       );
 };
@@ -24,40 +22,38 @@ const HomeScreen = (props) => {
 
 const styles = StyleSheet.create({
     gradient: {
-        flex: 1,
         alignItems: 'center',
-        justifyContent: 'center'
-    },
-    view: {
-        flex:4,
-        justifyContent: 'space-between'
-
-    },
-    image_view: {
-        flex: 3
+        justifyContent: 'space-around',
+        flex: 1
     },
     splash_image: {
-        width: 300,
-        height: 300,
+        width: 400,
+        height: 400,
+        marginTop: 100
     },
     icon: {
         width: 25,
-        height: 25
+        height: 25,
     },
     button: {
+        width: 175,
         backgroundColor: '#020316',
-        borderRadius: 5,
-        //marginHorizontal: 150,
-        //margin: 100,
-        flex: 1,
+        borderRadius: 10,
+        borderColor: '#FFFF',
+        borderWidth: 1,
+        shadowColor: 'rgba(0, 127, 0, 0.9)',
+        shadowOffset: { height: 3, width: 3 },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 5,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        //padding: 10
+        padding: 5
     },
     text: {
         //color: '#0DF219',
-        color: '#fff',
+        color: 'rgba(10, 200, 10, 1)',
         fontSize: 25
     }
 });
