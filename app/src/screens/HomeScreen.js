@@ -53,8 +53,13 @@ const styles = StyleSheet.create({
     },
     text: {
         //color: '#0DF219',
-        color: 'rgba(10, 200, 10, 1)',
-        fontSize: 25
+        color: 'rgba(0, 200, 0, 1)',
+        fontSize: 25,
+        shadowColor: 'rgba(0, 127, 0, 0.9)',
+        shadowOffset: { height: 3, width: 3 },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 5,
     }
 });
 
