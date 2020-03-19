@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 const HomeScreen = (props) => {
     return (
         <LinearGradient
-            colors = {['#020316', '#020316', '#0A063C']}
+            colors = {['black', '#020316', '#0A063C']}
             style={styles.gradient} >
                 
                 <Image style={styles.splash_image} source={require('../../assets/chroma_lair_nobg.png')}/>
