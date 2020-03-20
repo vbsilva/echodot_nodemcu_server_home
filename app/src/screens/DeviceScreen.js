@@ -13,7 +13,7 @@ const DeviceScreen = () => {
                 <View style={styles.cardContainer}>
                     <DeviceCard
                         device_name='fan'
-                        imageSource={require('../../assets/fan2_icon.png')}
+                        imageSource={require('../../assets/fan_icon.png')}
                     />
                     <DeviceCard
                         device_name='ac'
@@ -24,7 +24,7 @@ const DeviceScreen = () => {
                         imageSource={require('../../assets/tv_icon.png')}
                     />
                     <DeviceCard
-                        device_name='temp'
+                        device_name='temp3'
                         imageSource={require('../../assets/temp_icon.png')}
                     />
 
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
         paddingTop: 25
     },
     pagetitle: {
-        fontSize: 42,
+        fontSize: 30,
         alignSelf: 'center',
         color: 'rgba(0, 200, 0, 0.9)',
         padding: 25,
@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 1,
         shadowRadius: 5,
         elevation: 5,
+        fontFamily: 'Verdana'
     }
 });
 

@@ -23,13 +23,12 @@ const HomeScreen = (props) => {
 const styles = StyleSheet.create({
     gradient: {
         alignItems: 'center',
-        justifyContent: 'space-around',
+        justifyContent: 'center',
         flex: 1
     },
     splash_image: {
         width: 400,
         height: 400,
-        marginTop: 100
     },
     icon: {
         width: 25,
@@ -60,6 +59,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 1,
         shadowRadius: 5,
         elevation: 5,
+        fontFamily: 'Verdana'
     }
 });
 

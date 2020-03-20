@@ -1,15 +1,23 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Image, View, PanResponder } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Image, View, Vibration, Alert } from 'react-native';
 import api from '../api/api';
+import * as Haptics from 'expo-haptics';
 
 
 const DeviceCard = props => {
+    const errorMessage = 'Something went wrong :(';
 
 
     const deviceTapped = async () => {
-        const response = await api.get(props.device_name);
-        console.log(response.data)
-        console.log(response.status)
+       api.get(props.device_name)
+        .then( () => {
+            Haptics.notificationAsync('success')
+        })
+        .catch( error => {
+            Haptics.notificationAsync('error')
+            console.log(error);
+            Alert.alert(errorMessage);
+        })
     }
 
     return (
