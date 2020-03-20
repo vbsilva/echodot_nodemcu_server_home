@@ -66,25 +66,26 @@ void wifiSetup() {
 
 }
 
+
 void ac_remote() {
   irsend.sendRaw(AC_PWR, AC_LEN, IR_FREQ);
-  digitalWrite(debugLedPin, debugLedState);
+  digitalWrite(debugLedPin, LOW);
 }
 
 void ac_helper() {
+  digitalWrite(debugLedPin, HIGH);
   servo.write(ac_pos);
-  debugLedState = !debugLedState;
   timer.setTimeout(servo_delay, ac_remote);
 }
 
 void tv_remote() {
   irsend.sendRaw(TV_PWR, TV_LEN, IR_FREQ);
-  digitalWrite(debugLedPin, debugLedState);
+  digitalWrite(debugLedPin, LOW);
 }
 
 void tv_helper() {  
+  digitalWrite(debugLedPin, HIGH);
   servo.write(tv_pos);
-  debugLedState = !debugLedState;
   timer.setTimeout(servo_delay, tv_remote);
 }
 
@@ -104,24 +105,32 @@ void serverSetup() {
         // Handle not found request here...
     });
 
+    server.on("/states", HTTP_GET, [](AsyncWebServerRequest *request) {
+      String response = "";
+      response += "{\"fan\":";
+      response += digitalRead(fanRelayPin) ? "1": "0";
+      response += "}";
+      request->send(200, "application/json", response);
+    });
+
     server.on("/ac", HTTP_GET, [](AsyncWebServerRequest *request) {
       ac_helper();
-      request->send(200, "text/plain", ":)");
+      request->send(200, "text/plain", "1");
     });
 
     server.on("/tv", HTTP_GET, [](AsyncWebServerRequest *request) {
       tv_helper();
-      request->send(200, "text/plain", ":)");
+      request->send(200, "text/plain", "1");
     });
 
     server.on("/fan", HTTP_GET, [](AsyncWebServerRequest *request) {
       if (request->hasParam("on")) digitalWrite(fanRelayPin, HIGH);
       else digitalWrite(fanRelayPin, LOW);
-      request->send(200, "text/plain", ":)");
+      request->send(200, "text/plain", "1");
     });
 
     server.on("/temp", HTTP_GET, [](AsyncWebServerRequest *request) {       
-      request->send(200, "text/plain", "Todo");
+      request->send(200, "text/plain", String(random(20,40)));
     });
     server.begin();
 
