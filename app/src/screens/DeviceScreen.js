@@ -90,6 +90,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 1,
         shadowRadius: 5,
         elevation: 5,
-        fontFamily: 'Verdana'
+        fontFamily: 'Futura'
     },
 });

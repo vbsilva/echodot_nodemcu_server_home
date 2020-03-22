@@ -9,8 +9,8 @@ export default class DeviceCard extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            data: {},
-            value: this.props.value
+            value: this.props.value,
+            tapped: false
         }
 
     }
@@ -33,7 +33,6 @@ export default class DeviceCard extends Component {
     }
 
     generalTapped = async() => {
-        console.log("general")
         try {
             const response = await api.get(this.props.device_name);
             Haptics.notificationAsync('success');
@@ -44,14 +43,52 @@ export default class DeviceCard extends Component {
         }
     }
 
+    sensorTapped = async() => {
+        if (this.state.tapped) {
+            this.setState({
+                tapped: false
+            })
+            return;
+        }
+
+        try {
+            const response = await api.get(this.props.device_name);
+            Haptics.notificationAsync('success');
+            this.setState({
+                value: response.data,
+                tapped: true
+            });
+        } catch (err) {
+            console.log(err);
+            Haptics.notificationAsync('error')
+            Alert.alert(this.errorMessage);
+        }
+    }    
+
     render() {
-        var deviceTapped = this.props.device_type == "relay" ? this.relayTapped : this.generalTapped;
+        var deviceTapped;
+        var sensorValue = null;
+        var icon;
+        switch (this.props.device_type) {
+            case 'relay':
+                deviceTapped = this.relayTapped;
+                icon = <Image style={styles.icon} source={this.props.imageSource}/>
+                break;
+            case 'sensor':
+                deviceTapped = this.sensorTapped;
+                icon = <Image style={[styles.icon, {opacity: this.state.tapped? 0.2 : 1}]} source={this.props.imageSource}/>
+                sensorValue = <Text style={[styles.sensorValue, {opacity: this.state.tapped? 1: 0}]}>{this.state.value}°C</Text>;
+                break;
+            case 'general':
+                deviceTapped = this.generalTapped;
+                icon = <Image style={styles.icon} source={this.props.imageSource}/>
+                break;
+        }
         return (
             <View>
-                <TouchableOpacity 
-                    style={styles.card}
-                    onPress={deviceTapped}>
-                    <Image style={styles.icon} source={this.props.imageSource}/>
+                <TouchableOpacity style={styles.card} onPress={deviceTapped}>
+                    {icon}
+                    {sensorValue}
                 </TouchableOpacity>
             </View>
         );
@@ -78,6 +115,7 @@ const styles = StyleSheet.create({
     icon: {
         minWidth: 80,
         minHeight: 80,
+        opacity: 1
     },
     errorContainer: {
         flex: 1,
@@ -87,5 +125,11 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         fontSize: 40
+    },
+    sensorValue: {
+        color: 'rgba(0, 220, 0, 0.7)',
+        fontSize: 40,
+        position: 'absolute',
+        fontFamily: 'Futura'
     }
 });
