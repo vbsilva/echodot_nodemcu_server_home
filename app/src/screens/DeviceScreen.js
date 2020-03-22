@@ -1,36 +1,71 @@
-import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import React, { Component } from 'react';
+import { Text, View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import DeviceCard from '../components/DeviceCard';
+import api from '../api/api';
+import Images from '../../assets/index';
 
 
-const DeviceScreen = () => {
-    return (
-        <LinearGradient
-            colors = {['black', '#020316', '#0A063C']}
-            style={styles.gradient}>
-                <Text style={styles.pagetitle}>Tap to control</Text>
-                <View style={styles.cardContainer}>
-                    <DeviceCard
-                        device_name='fan'
-                        imageSource={require('../../assets/fan_icon.png')}
-                    />
-                    <DeviceCard
-                        device_name='ac'
-                        imageSource={require('../../assets/ac_icon.png')}
-                    />
-                    <DeviceCard
-                        device_name='tv'
-                        imageSource={require('../../assets/tv_icon.png')}
-                    />
-                    <DeviceCard
-                        device_name='temp3'
-                        imageSource={require('../../assets/temp_icon.png')}
-                    />
+export default class DeviceScreen extends Component {
 
-                </View>
-        </LinearGradient>
-    );
+    constructor() {
+        super();
+        this.state = {
+            loading: true,
+            devices: {}
+        }
+    }
+
+    errorLoadingMessage = 'Error loading devices from server :('
+
+    loadDevices = async() => {
+        try {
+            const devices = await api.get('devices');
+            this.setState({
+                loading: false,
+                devices: devices.data
+            })
+        } catch (err) {
+            Alert.alert(this.errorLoadingMessage);
+
+        }
+    }
+
+    componentDidMount() {
+        this.loadDevices();
+
+    }
+
+
+
+    render () {
+        var element;
+        if (this.state.loading) {
+            element = <ActivityIndicator size='large' color='rgba(0, 200, 0, 1)' />;
+        } else {
+            element = [];
+            for (var i in this.state.devices) {
+                element.push(
+                    <DeviceCard
+                        key={i}
+                        device_name={i}
+                        device_type={this.state.devices[i]["device_type"]}
+                        value={this.state.devices[i]["value"]}
+                        imageSource={Images.icons[i]}/>
+                );
+            }
+        }
+        return (
+            <LinearGradient
+                colors = {['black', '#020316', '#0A063C']}
+                style={styles.gradient}>
+                    <Text style={styles.pagetitle}>Tap to control</Text>
+                    <View style={styles.cardContainer}>
+                        {element}
+                    </View>
+            </LinearGradient>
+        );
+    }
 };
 
 const styles = StyleSheet.create({
@@ -56,7 +91,5 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 5,
         fontFamily: 'Verdana'
-    }
+    },
 });
-
-export default DeviceScreen;

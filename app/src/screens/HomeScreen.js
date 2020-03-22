@@ -1,6 +1,7 @@
 import React from 'react';
-import { Image, StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Images from '../../assets/index';
 
 
 const HomeScreen = (props) => {
@@ -9,9 +10,9 @@ const HomeScreen = (props) => {
             colors = {['black', '#020316', '#0A063C']}
             style={styles.gradient} >
                 
-                <Image style={styles.splash_image} source={require('../../assets/chroma_lair_nobg.png')}/>
+                <Image style={styles.splash_image} source={Images.logos.chroma_lair}/>
                 <TouchableOpacity style={styles.button} onPress={() => {props.navigation.navigate('Device')}}>
-                    <Image style={styles.icon} source={require('../../assets/login_icon.png')}/>
+                    <Image style={styles.icon} source={Images.icons.login}/>
                     <Text style={styles.text}> Login </Text>
                 </TouchableOpacity>
 
