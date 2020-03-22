@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #if defined(ESP8266)
     #include <ESP8266WiFi.h>
@@ -16,6 +17,7 @@
 #include <SimpleTimer.h>
 //#include <DHTesp.h>
 
+#include <ArduinoJson.h>
 
 SimpleTimer timer;
 
@@ -32,6 +34,9 @@ const uint16_t fanRelayPin = 16; // D0
 
 const uint16_t debugLedPin = 0; // D3
 bool debugLedState = false;
+
+DynamicJsonDocument devices(1024);
+char devices_json[256];
 
 fauxmoESP fauxmo;
 AsyncWebServer server(80);
@@ -90,6 +95,29 @@ void tv_helper() {
 }
 
 
+void setup_devices_json() {
+  JsonObject fan = devices.createNestedObject("fan");
+  //fan["device_name"] = "fan";
+  fan["device_type"] = "relay";
+  fan["value"] = 0;
+
+  JsonObject ac = devices.createNestedObject("ac");
+  //ac["device_name"] = "ac";
+  ac["device_type"] = "general";
+  ac["value"] = 0;
+
+  JsonObject tv = devices.createNestedObject("tv");
+  //tv["device_name"] = "tv";
+  tv["device_type"] = "general";
+  tv["value"] = 0;
+
+  JsonObject temp = devices.createNestedObject("temp");
+  //temp["device_name"] = "temp";
+  temp["device_type"] = "sensor";
+  temp["value"] = 0;
+  
+}
+
 void serverSetup() {
 
 
@@ -105,12 +133,11 @@ void serverSetup() {
         // Handle not found request here...
     });
 
-    server.on("/states", HTTP_GET, [](AsyncWebServerRequest *request) {
-      String response = "";
-      response += "{\"fan\":";
-      response += digitalRead(fanRelayPin) ? "1": "0";
-      response += "}";
-      request->send(200, "application/json", response);
+    server.on("/devices", HTTP_GET, [](AsyncWebServerRequest *request) {
+      devices["fan"]["value"] = digitalRead(fanRelayPin) ? 1: 0;
+      devices["temp"]["value"] = String(random(20,40));
+      serializeJson(devices, devices_json);
+      request->send(200, "application/json", devices_json);
     });
 
     server.on("/ac", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -124,8 +151,9 @@ void serverSetup() {
     });
 
     server.on("/fan", HTTP_GET, [](AsyncWebServerRequest *request) {
-      if (request->hasParam("on")) digitalWrite(fanRelayPin, HIGH);
-      else digitalWrite(fanRelayPin, LOW);
+      AsyncWebParameter* state = request->getParam("state");
+      int state_val = state->value().c_str()[0] - '0';
+      state_val ? digitalWrite(fanRelayPin, HIGH) : digitalWrite(fanRelayPin, LOW);
       request->send(200, "text/plain", "1");
     });
 
@@ -138,7 +166,7 @@ void serverSetup() {
 
 
 void setup() {
-
+    setup_devices_json();
     irsend.begin();
 
     pinMode(fanRelayPin, OUTPUT);
